@@ -2,6 +2,8 @@
 
 **Local-first visual research studio.** Turn references into editable moodboards and reusable design kits.
 
+[Live Demo ↗](https://forme-studio-coral.vercel.app)
+
 A quiet space for collecting images, composing a direction, and taking it into the next project. No account, backend, analytics, or image uploads to a server. The interface is in Russian.
 
 ![FORME moodboard editor](docs/screenshots/moodboard.png)
@@ -82,6 +84,8 @@ npm run preview
 # In a second terminal, with Google Chrome installed:
 npm run test:e2e
 node scripts/verify-artifacts.mjs
+# Optional: verify the published origin in isolated browser contexts.
+node scripts/production-smoke.mjs https://forme-studio-coral.vercel.app
 ```
 
 The release baseline passed 8 unit tests and 32 Playwright tests against the production build, including axe checks across landing, library, editor, and kit at 390, 768, 1366, and 1920 px. Export verification checks PNG dimensions and original/restored image hashes. An isolated `npm ci` build and Chromium/Firefox workflow smoke also passed. These are observed release checks, not a claim of universal browser or accessibility conformance.

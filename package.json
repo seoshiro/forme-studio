@@ -4,8 +4,14 @@
   "version": "1.0.0",
   "description": "Local-first visual research studio for turning references into editable moodboards and reusable design kits.",
   "license": "MIT",
-  "repository": { "type": "git", "url": "https://github.com/seoshiro/forme-studio.git" },
-  "engines": { "node": "24.x" },
+  "homepage": "https://forme-studio-coral.vercel.app",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/seoshiro/forme-studio.git"
+  },
+  "engines": {
+    "node": "24.x"
+  },
   "type": "module",
   "scripts": {
     "dev": "node node_modules/vite/bin/vite.js --host 127.0.0.1 --port 5180 --strictPort",
