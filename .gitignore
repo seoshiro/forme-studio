@@ -1,0 +1,25 @@
+node_modules/
+dist/
+.playwright-cli/
+test-results/
+playwright-report/
+.agents/skills/impeccable/scripts/bin/
+.playwright-browsers/
+.env
+.env.*
+
+# Local operating instructions and historical evidence stay on the local branch.
+.agents/
+AGENTS.md
+DESIGN.md
+PROJECT_BRIEF.md
+PROJECT_REPORT.md
+VERIFICATION.md
+SOURCES.md
+TOOL_ROUTING.md
+docs/*
+!docs/asset-provenance.json
+!docs/screenshots/
+scripts/lock-local-dependencies.mjs
+.vercel/
+*.log

@@ -1,0 +1,38 @@
+{
+  "name": "forme-studio",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Local-first visual research studio for turning references into editable moodboards and reusable design kits.",
+  "license": "MIT",
+  "repository": { "type": "git", "url": "https://github.com/seoshiro/forme-studio.git" },
+  "engines": { "node": "24.x" },
+  "type": "module",
+  "scripts": {
+    "dev": "node node_modules/vite/bin/vite.js --host 127.0.0.1 --port 5180 --strictPort",
+    "build": "node node_modules/vite/bin/vite.js build",
+    "preview": "node node_modules/vite/bin/vite.js preview --host 127.0.0.1 --port 5180 --strictPort",
+    "typecheck": "node node_modules/typescript/bin/tsc --noEmit",
+    "lint": "node node_modules/eslint/bin/eslint.js src tests",
+    "test": "node --experimental-strip-types --test tests/model.test.ts",
+    "test:e2e": "node node_modules/@playwright/test/cli.js test"
+  },
+  "dependencies": {
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "jszip": "3.10.2",
+    "lucide-react": "1.31.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "6.1.1",
+    "vite": "8.3.0",
+    "typescript": "5.9.3",
+    "eslint": "9.39.1",
+    "typescript-eslint": "8.70.1",
+    "@eslint/js": "9.39.1",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@types/node": "26.6.2",
+    "@playwright/test": "1.63.0",
+    "axe-core": "4.13.0"
+  }
+}

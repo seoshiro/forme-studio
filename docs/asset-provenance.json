@@ -1,0 +1,138 @@
+{
+  "checkedOn": "2026-09-25",
+  "photos": [
+    {
+      "path": "public/images/photo-1.jpg",
+      "source": "https://images.unsplash.com/photo-1487958449943-2429e8be8625?auto=format&fit=crop&w=1000&q=85",
+      "license": "https://unsplash.com/license",
+      "author": "NOT_VERIFIED",
+      "bytes": 107087,
+      "sha256": "615474347249dd829ed971017267aed0bfaaacb05c76ae0a1547909e18123d16"
+    },
+    {
+      "path": "public/images/photo-2.jpg",
+      "source": "https://images.unsplash.com/photo-1511818966892-d7d671e672a2?auto=format&fit=crop&w=1000&q=85",
+      "license": "https://unsplash.com/license",
+      "author": "NOT_VERIFIED",
+      "bytes": 175897,
+      "sha256": "7340f695a1c02b8f72289b6d0be564c48d5fec6be545b66fd35a20b86a30dead"
+    },
+    {
+      "path": "public/images/photo-3.jpg",
+      "source": "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1000&q=85",
+      "license": "https://unsplash.com/license",
+      "author": "NOT_VERIFIED",
+      "bytes": 166949,
+      "sha256": "95bd80c34c40d7314a20d17bbab7fa6bf11228d2d48d7ca84595f1dc3c2b6f3c"
+    },
+    {
+      "path": "public/images/photo-4.jpg",
+      "source": "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1000&q=85",
+      "license": "https://unsplash.com/license",
+      "author": "NOT_VERIFIED",
+      "bytes": 121861,
+      "sha256": "18774c044824b355ec867e9619aeb3fb0c471d3d7f2c181e06f3792c34b9fcf5"
+    },
+    {
+      "path": "public/images/photo-5.jpg",
+      "source": "https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?auto=format&fit=crop&w=1000&q=85",
+      "license": "https://unsplash.com/license",
+      "author": "NOT_VERIFIED",
+      "bytes": 83290,
+      "sha256": "c2632477252eaa56233943fa1ff902096b37cee1f915928eb774e6e900eeadab"
+    },
+    {
+      "path": "public/images/photo-6.jpg",
+      "source": "https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?auto=format&fit=crop&w=1000&q=85",
+      "license": "https://unsplash.com/license",
+      "author": "NOT_VERIFIED",
+      "bytes": 136912,
+      "sha256": "e68ae10694f5c8c8d10e5c0be4aa30df2f8c7cb235dc9fa7255eab11739404f7"
+    },
+    {
+      "path": "public/images/photo-7.jpg",
+      "source": "https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=1000&q=85",
+      "license": "https://unsplash.com/license",
+      "author": "NOT_VERIFIED",
+      "bytes": 93973,
+      "sha256": "27843b37232528efffefba10a6a51c180e04c9811741324fd154d77fb5e019e2"
+    },
+    {
+      "path": "public/images/photo-8.jpg",
+      "source": "https://images.unsplash.com/photo-1490312278390-ab64016e0aa9?auto=format&fit=crop&w=1000&q=85",
+      "license": "https://unsplash.com/license",
+      "author": "NOT_VERIFIED",
+      "bytes": 42554,
+      "sha256": "8288432ed360185b433ce0c7fde214695726568c4c12f2d74a710a188353877e"
+    },
+    {
+      "path": "public/images/photo-9.jpg",
+      "source": "https://images.unsplash.com/photo-1514565131-fce0801e5785?auto=format&fit=crop&w=1000&q=85",
+      "license": "https://unsplash.com/license",
+      "author": "NOT_VERIFIED",
+      "bytes": 124606,
+      "sha256": "1569eeee5c63153087d761d5cefa8bd50c95a5f6c81e44182d72e3a026f2d470"
+    },
+    {
+      "path": "public/images/photo-10.jpg",
+      "source": "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=1000&q=85",
+      "license": "https://unsplash.com/license",
+      "author": "NOT_VERIFIED",
+      "bytes": 217857,
+      "sha256": "d1ca64ddf288368f985e8aabb94da3dd4aaa5c45acd5ea12e52b6faf3f969c41"
+    },
+    {
+      "path": "public/images/photo-11.jpg",
+      "source": "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?auto=format&fit=crop&w=1000&q=85",
+      "license": "https://unsplash.com/license",
+      "author": "NOT_VERIFIED",
+      "bytes": 163632,
+      "sha256": "547963bd00a8f3335d8e47ccf76c216bf4b870c57e0f4a25dd2f183cecbf3707"
+    },
+    {
+      "path": "public/images/photo-12.jpg",
+      "source": "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?auto=format&fit=crop&w=1000&q=85",
+      "license": "https://unsplash.com/license",
+      "author": "NOT_VERIFIED",
+      "bytes": 191923,
+      "sha256": "9b649bd7c187d7dbeb62218d493a8a165e8e23deac8d25473f5601fbd5ef4827"
+    }
+  ],
+  "fonts": [
+    {
+      "path": "public/fonts/CormorantGaramond-Italic.ttf",
+      "source": "https://github.com/google/fonts",
+      "license": "SIL Open Font License 1.1",
+      "bytes": 715644,
+      "sha256": "0f48ea6abb2084537854f7174c470991a463b13036309e3b50a81511611c530d"
+    },
+    {
+      "path": "public/fonts/CormorantGaramond-OFL.txt",
+      "source": "https://github.com/google/fonts",
+      "license": "SIL Open Font License 1.1",
+      "bytes": 4387,
+      "sha256": "60700d351cac4650c51f3f9db318d2a420f8b45052dba2715eb5fec41f0f6956"
+    },
+    {
+      "path": "public/fonts/CormorantGaramond.ttf",
+      "source": "https://github.com/google/fonts",
+      "license": "SIL Open Font License 1.1",
+      "bytes": 1195560,
+      "sha256": "b20b7d9626dd956b2c5e558692ad328b1f19e3275e2782db4fa07670d83f35e0"
+    },
+    {
+      "path": "public/fonts/Manrope-OFL.txt",
+      "source": "https://github.com/google/fonts",
+      "license": "SIL Open Font License 1.1",
+      "bytes": 4387,
+      "sha256": "58172e0c0fac2cda8a37b348164bb55e44b0e69051e557e92b1d3f6910141f7b"
+    },
+    {
+      "path": "public/fonts/Manrope.ttf",
+      "source": "https://github.com/google/fonts",
+      "license": "SIL Open Font License 1.1",
+      "bytes": 164700,
+      "sha256": "3ae11c49db0455a3cc33e37d380f20fdb8c7f8b41dc07625c177e3d87a9d6ae6"
+    }
+  ]
+}

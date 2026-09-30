@@ -1,0 +1,12 @@
+# Explicit source allowlist: local evidence and tool configuration are not deployed.
+*
+!src/
+!src/**
+!public/
+!public/**
+!index.html
+!package.json
+!package-lock.json
+!tsconfig.json
+!vite.config.ts
+!vercel.json
