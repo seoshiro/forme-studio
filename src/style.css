@@ -1837,6 +1837,18 @@ dialog form > .muted {
 .busy-status {
   bottom: 80px;
 }
+.modal .global-error,
+.modal .busy-status,
+.modal .toast {
+  position: static;
+  transform: none;
+  max-width: 100%;
+  margin-bottom: 18px;
+  box-shadow: none;
+}
+.modal .global-error > p {
+  overflow-wrap: anywhere;
+}
 .error-text {
   color: #a43620;
   font-size: 12px;
@@ -3190,6 +3202,11 @@ dialog,
 .palette-strip button[aria-pressed="true"] {
   outline: 2px solid var(--ink);
   outline-offset: 2px;
+}
+.palette-strip button[aria-pressed="true"]:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 4px;
+  box-shadow: 0 0 0 2px var(--surface);
 }
 .palette-strip span {
   font-size: 11px;

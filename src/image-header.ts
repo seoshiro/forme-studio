@@ -30,6 +30,10 @@ export function imageDimensions(buffer: ArrayBuffer): {
         i++;
         continue;
       }
+      if (b[i + 1] === 255) {
+        i++;
+        continue;
+      }
       const marker = b[i + 1];
       if (marker === 0xda || marker === 0xd9) break;
       if (

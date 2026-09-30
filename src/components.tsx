@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useId, useRef, type ReactNode } from "react";
 import { X, ArrowUpRight } from "lucide-react";
 export function Brand({ onClick }: { onClick: () => void }) {
   return (
@@ -43,27 +43,35 @@ export function Modal({
   onClose,
   children,
   wide = false,
+  feedback,
+  returnFocus,
 }: {
   title: string;
   onClose: () => void;
   children: ReactNode;
   wide?: boolean;
+  feedback?: ReactNode;
+  returnFocus?: HTMLElement | null;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
+  const trigger = useRef(returnFocus);
   useEffect(() => {
     const dialog = ref.current!;
-    const previous = document.activeElement as HTMLElement | null;
+    const previous =
+      trigger.current ?? (document.activeElement as HTMLElement | null);
     dialog.showModal();
+    dialog.querySelector<HTMLElement>("[data-autofocus]")?.focus();
     return () => {
       dialog.close();
-      previous?.focus();
+      if (previous?.isConnected) previous.focus();
     };
   }, []);
   return (
     <dialog
       ref={ref}
       className={`modal ${wide ? "wide" : ""}`}
-      aria-labelledby="dialog-title"
+      aria-labelledby={titleId}
       onCancel={(e) => {
         e.preventDefault();
         onClose();
@@ -82,11 +90,12 @@ export function Modal({
       }}
     >
       <div className="modal-header">
-        <h2 id="dialog-title">{title}</h2>
+        <h2 id={titleId}>{title}</h2>
         <IconButton label="Закрыть диалог" onClick={onClose}>
           <X size={20} />
         </IconButton>
       </div>
+      {feedback}
       {children}
     </dialog>
   );

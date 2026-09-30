@@ -25,7 +25,7 @@ import {
   Palette,
   AlertCircle,
 } from "lucide-react";
-import { Brand, IconButton, Modal } from "./components";
+import { Brand, Empty, IconButton, Modal } from "./components";
 import { BoardPreview } from "./Board";
 import {
   blankProject,
@@ -70,6 +70,8 @@ export default function App() {
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
   const [toast, setToast] = useState("");
+  const [loadError, setLoadError] = useState("");
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const [presentation, setPresentation] = useState(false);
   const [drag, setDrag] = useState(false);
   const upload = useRef<HTMLInputElement>(null),
@@ -77,6 +79,12 @@ export default function App() {
   const current = useRef<ProjectSession | null>(null);
   const operation = useRef(false);
   const navigation = useRef(0);
+  const modalFocus = useRef<HTMLElement | null>(null);
+  const showModal = (next: Exclude<typeof modal, null>) => {
+    if (!modal)
+      modalFocus.current = document.activeElement as HTMLElement | null;
+    setModal(next);
+  };
   useSyncExternalStore(
     session?.subscribe ?? (() => () => {}),
     session?.snapshot ?? (() => 0),
@@ -124,6 +132,8 @@ export default function App() {
     let opened: ProjectSession | undefined;
     setSession(null);
     setUrls({});
+    setLoadError("");
+    current.current = null;
     if (id)
       void loadProject(id)
         .then((doc) => {
@@ -143,13 +153,18 @@ export default function App() {
               if (!cancelled) setError(e.message);
             });
         })
-        .catch((e) => setError(e.message));
+        .catch((e) => {
+          if (!cancelled) {
+            setLoadError(e.message);
+            setError(e.message);
+          }
+        });
     else current.current = null;
     return () => {
       cancelled = true;
       opened?.close();
     };
-  }, [id]);
+  }, [id, loadAttempt]);
   const materialKey = session?.doc.materials
     .map((m) => m.id + ":" + m.blobId)
     .join("|");
@@ -241,7 +256,9 @@ export default function App() {
       await fn();
     } catch (e) {
       setError(
-        e instanceof Error ? e.message : "Не удалось выполнить действие.",
+        e instanceof Error || e instanceof DOMException
+          ? e.message
+          : "Не удалось выполнить действие.",
       );
     } finally {
       setBusy("");
@@ -354,8 +371,36 @@ export default function App() {
   };
   const projectsModal = () => {
     refresh();
-    setModal("projects");
+    showModal("projects");
   };
+  const feedback = (
+    <>
+      {error && (
+        <div className="global-error" role="alert">
+          <AlertCircle size={20} />
+          <p>{error}</p>
+          <IconButton
+            label="Закрыть сообщение об ошибке"
+            onClick={() => setError("")}
+          >
+            <X size={18} />
+          </IconButton>
+        </div>
+      )}
+      {busy && (
+        <div className="busy-status" role="status">
+          <LoaderCircle className="spinning" size={17} />
+          {busy}
+        </div>
+      )}
+      {toast && !error && (
+        <div className="toast" role="status">
+          <Check size={17} />
+          {toast}
+        </div>
+      )}
+    </>
+  );
   return (
     <div
       className={`app ${id ? "studio" : "landing"} ${presentation ? "presentation-mode" : ""}`}
@@ -534,7 +579,7 @@ export default function App() {
               onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
             />
             <span>Личная коллекция. Собственный взгляд.</span>
-            <button onClick={() => setModal("storage")}>
+            <button onClick={() => showModal("storage")}>
               О локальном хранении
             </button>
           </footer>
@@ -631,7 +676,7 @@ export default function App() {
                   <button
                     aria-label="Экспорт"
                     className="button primary export-top"
-                    onClick={() => setModal("export")}
+                    onClick={() => showModal("export")}
                   >
                     <Download size={16} />
                     <span>Экспорт</span>
@@ -701,6 +746,21 @@ export default function App() {
                   notify={setToast}
                 />
               )
+            ) : loadError ? (
+              <Empty
+                title="Не удалось открыть коллекцию"
+                description={loadError}
+              >
+                <button className="button primary" onClick={projectsModal}>
+                  Выбрать коллекцию
+                </button>
+                <button
+                  className="button"
+                  onClick={() => setLoadAttempt((n) => n + 1)}
+                >
+                  Повторить открытие
+                </button>
+              </Empty>
             ) : (
               <div className="loading-state">
                 <LoaderCircle className="spinning" />
@@ -742,12 +802,19 @@ export default function App() {
         }}
       />
       {modal === "projects" && (
-        <Modal title="Ваше пространство" onClose={() => setModal(null)} wide>
+        <Modal
+          key={modal}
+          title="Ваше пространство"
+          onClose={() => setModal(null)}
+          wide
+          feedback={feedback}
+          returnFocus={modalFocus.current}
+        >
           <p className="muted">
             Коллекции живут в этом браузере. Начните свою или исследуйте пример.
           </p>
           <div className="project-actions">
-            <button className="button primary" onClick={() => setModal("new")}>
+            <button className="button primary" onClick={() => showModal("new")}>
               <Plus size={17} />
               Новая коллекция
             </button>
@@ -799,14 +866,20 @@ export default function App() {
           </div>
           <button
             className="text-link storage-link"
-            onClick={() => setModal("storage")}
+            onClick={() => showModal("storage")}
           >
             Как хранится моя работа?
           </button>
         </Modal>
       )}
       {modal === "new" && (
-        <Modal title="Начало новой идеи" onClose={() => setModal(null)}>
+        <Modal
+          key={modal}
+          title="Начало новой идеи"
+          onClose={() => setModal(null)}
+          feedback={feedback}
+          returnFocus={modalFocus.current}
+        >
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -824,6 +897,7 @@ export default function App() {
               Название коллекции
               <input
                 autoFocus
+                data-autofocus
                 name="name"
                 required
                 maxLength={120}
@@ -839,7 +913,13 @@ export default function App() {
         </Modal>
       )}
       {modal === "export" && (
-        <Modal title="Заберите идею с собой" onClose={() => setModal(null)}>
+        <Modal
+          key={modal}
+          title="Заберите идею с собой"
+          onClose={() => setModal(null)}
+          feedback={feedback}
+          returnFocus={modalFocus.current}
+        >
           <p className="muted">Из вашего пространства — в следующий проект.</p>
           <div className="export-options">
             <button disabled={!!busy} onClick={() => exportFile("png")}>
@@ -878,8 +958,11 @@ export default function App() {
       )}
       {modal === "storage" && (
         <Modal
+          key={modal}
           title="Ваши находки остаются вашими"
           onClose={() => setModal(null)}
+          feedback={feedback}
+          returnFocus={modalFocus.current}
         >
           <div className="storage-info">
             <HardDrive size={32} />
@@ -903,30 +986,7 @@ export default function App() {
           </div>
         </Modal>
       )}
-      {error && (
-        <div className="global-error" role="alert">
-          <AlertCircle size={20} />
-          <p>{error}</p>
-          <IconButton
-            label="Закрыть сообщение об ошибке"
-            onClick={() => setError("")}
-          >
-            <X size={18} />
-          </IconButton>
-        </div>
-      )}
-      {busy && (
-        <div className="busy-status" role="status">
-          <LoaderCircle className="spinning" size={17} />
-          {busy}
-        </div>
-      )}
-      {toast && !error && (
-        <div className="toast" role="status">
-          <Check size={17} />
-          {toast}
-        </div>
-      )}
+      {!modal && feedback}
       {drag && (
         <div className="drop-overlay">
           <Upload size={42} />

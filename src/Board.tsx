@@ -15,7 +15,7 @@ export function ObjectVisual({
   urls: Record<string, string>;
 }) {
   if (o.type === "image")
-    return <img src={urls[o.assetId!] || ""} alt={o.title} draggable={false} />;
+    return <img src={urls[o.assetId!]} alt={o.title} draggable={false} />;
   if (o.type === "swatch")
     return <div className="object-swatch" style={{ background: o.color }} />;
   return (
@@ -111,18 +111,43 @@ export function Board({
   const [preview, setPreview] = useState<BoardObject | null>(null);
   const [guides, setGuides] = useState({ x: false, y: false });
   const [dragging, setDragging] = useState(false);
+  const autoFit = useRef(true);
   const gesture = useRef<{
     kind: "move" | "resize" | "pan";
+    pointerId: number;
+    capture: Element;
     object?: BoardObject;
     startX: number;
     startY: number;
     pan: { x: number; y: number };
     scale: number;
+    moved?: boolean;
     next?: BoardObject;
   } | null>(null);
+  const finish = (commit = false) => {
+    const g = gesture.current;
+    if (!g) return;
+    gesture.current = null;
+    if (commit && g.kind === "pan" && g.moved) autoFit.current = false;
+    if (!commit && g.kind === "pan") setPan(g.pan);
+    setPreview(null);
+    setGuides({ x: false, y: false });
+    setDragging(false);
+    if (g.capture.hasPointerCapture(g.pointerId))
+      g.capture.releasePointerCapture(g.pointerId);
+    if (
+      commit &&
+      !readOnly &&
+      g.next &&
+      JSON.stringify(g.next) !== JSON.stringify(g.object)
+    )
+      onCommit(g.next);
+  };
   const fit = () => {
     const el = viewport.current;
     if (!el) return;
+    finish();
+    autoFit.current = true;
     setScale(
       Math.max(
         0.08,
@@ -138,18 +163,67 @@ export function Board({
   useEffect(() => {
     fit();
     const el = viewport.current!;
-    const observer = new ResizeObserver(() => fit());
+    const observer = new ResizeObserver(() => {
+      if (autoFit.current) fit();
+      else finish();
+    });
     observer.observe(el);
     return () => observer.disconnect();
   }, [doc.id, doc.width, doc.height, presentation]);
+  useEffect(() => {
+    const cancel = () => finish();
+    const visibility = () => {
+      if (document.hidden) cancel();
+    };
+    const key = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && gesture.current) {
+        e.preventDefault();
+        e.stopPropagation();
+        cancel();
+      }
+    };
+    window.addEventListener("blur", cancel);
+    window.addEventListener("keydown", key, true);
+    document.addEventListener("visibilitychange", visibility);
+    return () => {
+      window.removeEventListener("blur", cancel);
+      window.removeEventListener("keydown", key, true);
+      document.removeEventListener("visibilitychange", visibility);
+      cancel();
+    };
+  }, []);
+  useEffect(() => {
+    const g = gesture.current;
+    if (
+      g &&
+      ((readOnly && g.kind !== "pan") ||
+        (g.object &&
+          doc.objects.find((o) => o.id === g.object!.id) !== g.object))
+    )
+      finish();
+  }, [doc.objects, readOnly]);
+  useEffect(() => {
+    const el = viewport.current!;
+    const wheel = (e: WheelEvent) => {
+      if (!e.ctrlKey) return;
+      e.preventDefault();
+      if (gesture.current || e.deltaY === 0) return;
+      autoFit.current = false;
+      setScale((s) =>
+        Math.max(0.08, Math.min(2, s * (e.deltaY > 0 ? 0.92 : 1.08))),
+      );
+    };
+    el.addEventListener("wheel", wheel, { passive: false });
+    return () => el.removeEventListener("wheel", wheel);
+  }, []);
   const start = (
     e: ReactPointerEvent,
     object?: BoardObject,
     resize = false,
   ) => {
-    if (e.button !== 0) return;
+    if (e.button !== 0 || gesture.current) return;
+    e.stopPropagation();
     if (object && !hand) {
-      e.stopPropagation();
       onSelect(object.id);
       if (readOnly) return;
     } else if (!hand && object === undefined) {
@@ -160,6 +234,8 @@ export function Board({
     e.currentTarget.setPointerCapture(e.pointerId);
     gesture.current = {
       kind: hand || !object ? "pan" : resize ? "resize" : "move",
+      pointerId: e.pointerId,
+      capture: e.currentTarget,
       object,
       startX: e.clientX,
       startY: e.clientY,
@@ -170,17 +246,18 @@ export function Board({
   };
   const move = (e: ReactPointerEvent) => {
     const g = gesture.current;
-    if (!g) return;
+    if (!g || e.pointerId !== g.pointerId) return;
     const dx = (e.clientX - g.startX) / g.scale,
       dy = (e.clientY - g.startY) / g.scale;
     if (g.kind === "pan") {
+      g.moved = dx !== 0 || dy !== 0;
       setPan({ x: g.pan.x + dx * g.scale, y: g.pan.y + dy * g.scale });
       return;
     }
     const o = { ...g.object! };
     if (g.kind === "resize") {
-      o.width += dx;
-      o.height += dy;
+      o.width = Math.max(24, Math.min(doc.width - o.x, o.width + dx));
+      o.height = Math.max(24, Math.min(doc.height - o.y, o.height + dy));
     } else {
       o.x += dx;
       o.y += dy;
@@ -203,37 +280,23 @@ export function Board({
     setPreview(g.next);
     setGuides({ x: gx, y: gy });
   };
-  const end = () => {
-    const g = gesture.current;
-    if (g?.next && JSON.stringify(g.next) !== JSON.stringify(g.object))
-      onCommit(g.next);
-    gesture.current = null;
-    setPreview(null);
-    setGuides({ x: false, y: false });
-    setDragging(false);
-  };
   return (
     <div className={`board-workspace ${presentation ? "presenting" : ""}`}>
       <div
         ref={viewport}
         className={`board-viewport ${hand ? "hand-mode" : ""} ${dragging ? "dragging" : ""}`}
+        tabIndex={-1}
         aria-label="Рабочая область доски"
         onPointerDown={(e) => start(e)}
         onPointerMove={move}
-        onPointerUp={end}
-        onPointerCancel={() => {
-          gesture.current = null;
-          setPreview(null);
-          setDragging(false);
-          setGuides({ x: false, y: false });
+        onPointerUp={(e) => {
+          if (e.pointerId === gesture.current?.pointerId) finish(true);
         }}
-        onWheel={(e) => {
-          if (e.ctrlKey) {
-            e.preventDefault();
-            setScale((s) =>
-              Math.max(0.08, Math.min(2, s * (e.deltaY > 0 ? 0.92 : 1.08))),
-            );
-          }
+        onPointerCancel={(e) => {
+          if (e.pointerId === gesture.current?.pointerId) finish();
+        }}
+        onLostPointerCapture={(e) => {
+          if (e.pointerId === gesture.current?.pointerId) finish();
         }}
       >
         <div
@@ -260,6 +323,7 @@ export function Board({
                   tabIndex={presentation ? -1 : 0}
                   aria-label={`Объект: ${o.title}`}
                   aria-pressed={selected === o.id}
+                  data-object-id={o.id}
                   key={o.id}
                   className={`scene-object ${o.type} ${!presentation && selected === o.id ? "selected" : ""}`}
                   style={
@@ -273,10 +337,10 @@ export function Board({
                   }
                   onClick={(e) => {
                     e.stopPropagation();
-                    onSelect(o.id);
+                    if (!hand && !presentation) onSelect(o.id);
                   }}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
+                    if (!presentation && (e.key === "Enter" || e.key === " ")) {
                       e.preventDefault();
                       onSelect(o.id, true);
                     }
@@ -324,14 +388,20 @@ export function Board({
           <IconButton
             label="Выделение"
             active={!hand}
-            onClick={() => setHand(false)}
+            onClick={() => {
+              finish();
+              setHand(false);
+            }}
           >
             <MousePointer2 size={17} />
           </IconButton>
           <IconButton
             label="Перемещение области"
             active={hand}
-            onClick={() => setHand(true)}
+            onClick={() => {
+              finish();
+              setHand(true);
+            }}
           >
             <Hand size={17} />
           </IconButton>
@@ -339,14 +409,22 @@ export function Board({
         <div className="tool-group">
           <IconButton
             label="Уменьшить масштаб"
-            onClick={() => setScale((s) => Math.max(0.08, s - 0.1))}
+            onClick={() => {
+              finish();
+              autoFit.current = false;
+              setScale((s) => Math.max(0.08, s - 0.1));
+            }}
           >
             <Minus size={17} />
           </IconButton>
           <output aria-label="Масштаб">{Math.round(scale * 100)}%</output>
           <IconButton
             label="Увеличить масштаб"
-            onClick={() => setScale((s) => Math.min(2, s + 0.1))}
+            onClick={() => {
+              finish();
+              autoFit.current = false;
+              setScale((s) => Math.min(2, s + 0.1));
+            }}
           >
             <Plus size={17} />
           </IconButton>

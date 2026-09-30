@@ -15,6 +15,15 @@ const pending = new Map<
     timeout: ReturnType<typeof setTimeout>;
   }
 >();
+function resetWorker(error: Error) {
+  worker?.terminate();
+  worker = undefined;
+  for (const item of pending.values()) {
+    clearTimeout(item.timeout);
+    item.reject(error);
+  }
+  pending.clear();
+}
 export function processImage(file: Blob): Promise<ProcessedImage> {
   if (!worker) {
     worker = new Worker(new URL("./image.worker.ts", import.meta.url), {
@@ -29,22 +38,15 @@ export function processImage(file: Blob): Promise<ProcessedImage> {
       else item.resolve(data);
     };
     worker.onerror = () => {
-      for (const item of pending.values()) {
-        clearTimeout(item.timeout);
-        item.reject(
-          new Error("Обработчик изображений недоступен. Обновите страницу."),
-        );
-      }
-      pending.clear();
-      worker?.terminate();
-      worker = undefined;
+      resetWorker(
+        new Error("Обработчик изображений недоступен. Обновите страницу."),
+      );
     };
   }
   return new Promise((resolve, reject) => {
     const id = ++sequence;
     const timeout = setTimeout(() => {
-      pending.delete(id);
-      reject(
+      resetWorker(
         new Error(
           "Обработка заняла слишком много времени. Попробуйте файл меньшего размера.",
         ),

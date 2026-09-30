@@ -150,25 +150,48 @@ export function Editor({
       const i = d.objects.findIndex((a) => a.id === o.id);
       if (i >= 0) d.objects[i] = clampObject(o, d);
     });
-  const remove = () => {
-    session.command((d) => {
-      d.objects = d.objects.filter((o) => o.id !== selected);
+  const focusObject = (id: string | null) => {
+    const interaction = ++panelInteraction.current;
+    requestAnimationFrame(() => {
+      if (interaction !== panelInteraction.current) return;
+      const target = id
+        ? editor.current?.querySelector<HTMLElement>(
+            `.board-scene [data-object-id="${CSS.escape(id)}"]`,
+          )
+        : editor.current?.querySelector<HTMLElement>(".board-viewport");
+      target?.focus({ preventScroll: true });
     });
-    setSelected(null);
   };
-  const duplicate = () => {
-    if (!object) return;
+  const remove = (target = object) => {
+    if (!target) return;
+    const index = doc.objects.findIndex((o) => o.id === target.id);
+    const remaining = doc.objects.filter((o) => o.id !== target.id);
+    const next = remaining[Math.min(index, remaining.length - 1)];
+    if (
+      session.command((d) => {
+        d.objects = d.objects.filter((o) => o.id !== target.id);
+      })
+    ) {
+      setSelected(next?.id ?? null);
+      focusObject(next?.id ?? null);
+    }
+  };
+  const duplicate = (target = object, keyboard = false) => {
+    if (!target) return;
     const next = clampObject(
       {
-        ...object,
+        ...target,
         id: uid(),
-        x: object.x + 24,
-        y: object.y + 24,
-        title: (object.title + " · копия").slice(0, 120),
+        x: target.x + 24,
+        y: target.y + 24,
+        title: (target.title + " · копия").slice(0, 120),
       },
       doc,
     );
-    if (session.command((d) => d.objects.push(next))) setSelected(next.id);
+    if (session.command((d) => d.objects.push(next))) {
+      setSelected(next.id);
+      if (keyboard) focusObject(next.id);
+    }
   };
   const layer = (direction: number) =>
     session.command((d) => {
@@ -197,20 +220,26 @@ export function Editor({
   };
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
-      if (e.isComposing || (e.target as HTMLElement).closest("dialog")) return;
+      const target = e.target as HTMLElement;
+      if (e.defaultPrevented || e.isComposing || target.closest("dialog"))
+        return;
       if (e.key === "Escape" && mobile() && panel) {
         e.preventDefault();
         closePanel();
         return;
       }
       if (
-        (e.target as HTMLElement).closest(
+        target.closest(
           'input,textarea,select,[contenteditable="true"],dialog',
         ) ||
         presentation ||
         session.readOnly
       )
         return;
+      const focused = target.closest<HTMLElement>(".scene-object");
+      const activeObject = focused
+        ? doc.objects.find((o) => o.id === focused.dataset.objectId)
+        : object;
       const mod = e.ctrlKey || e.metaKey;
       if (mod && e.key.toLowerCase() === "z") {
         e.preventDefault();
@@ -219,26 +248,33 @@ export function Editor({
       } else if (mod && e.key.toLowerCase() === "y") {
         e.preventDefault();
         session.redo();
-      } else if (mod && e.key.toLowerCase() === "d" && object) {
+      } else if (mod && e.key.toLowerCase() === "d" && activeObject) {
         e.preventDefault();
-        duplicate();
-      } else if ((e.key === "Delete" || e.key === "Backspace") && object) {
+        duplicate(activeObject, Boolean(focused));
+      } else if (
+        (e.key === "Delete" || e.key === "Backspace") &&
+        activeObject
+      ) {
         e.preventDefault();
-        remove();
+        remove(activeObject);
       } else if (e.key === "Escape") setSelected(null);
       else if (
-        object &&
+        activeObject &&
+        (focused ||
+          target === document.body ||
+          target.matches(".board-viewport")) &&
         ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)
       ) {
         e.preventDefault();
+        setSelected(activeObject.id);
         const step = e.shiftKey ? 10 : 1;
         update({
-          ...object,
+          ...activeObject,
           x:
-            object.x +
+            activeObject.x +
             (e.key === "ArrowRight" ? step : e.key === "ArrowLeft" ? -step : 0),
           y:
-            object.y +
+            activeObject.y +
             (e.key === "ArrowDown" ? step : e.key === "ArrowUp" ? -step : 0),
         });
       }
@@ -519,11 +555,14 @@ export function Editor({
                     </button>
                   </div>
                 </div>
-                <button className="button full" onClick={duplicate}>
+                <button className="button full" onClick={() => duplicate()}>
                   <Copy size={16} />
                   Дублировать
                 </button>
-                <button className="button full subtle-danger" onClick={remove}>
+                <button
+                  className="button full subtle-danger"
+                  onClick={() => remove()}
+                >
                   <Trash2 size={16} />
                   Удалить объект
                 </button>

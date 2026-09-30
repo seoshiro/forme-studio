@@ -22,10 +22,12 @@ export function MaterialForm({
   material,
   onSave,
   onClose,
+  readOnly = false,
 }: {
   material?: Material;
   onSave: (m: Material) => boolean;
   onClose: () => void;
+  readOnly?: boolean;
 }) {
   const [type, setType] = useState(material?.type ?? "note");
   const [title, setTitle] = useState(material?.title ?? "");
@@ -40,6 +42,7 @@ export function MaterialForm({
       <form
         onSubmit={(e) => {
           e.preventDefault();
+          if (readOnly) return;
           try {
             const m: Material = {
               ...material,
@@ -75,10 +78,16 @@ export function MaterialForm({
           }
         }}
       >
+        {readOnly && (
+          <p className="muted">
+            Режим просмотра. Редактирование доступно в другой вкладке.
+          </p>
+        )}
         {!material && (
           <div className="segmented">
             <button
               type="button"
+              disabled={readOnly}
               aria-pressed={type === "note"}
               className={type === "note" ? "active" : ""}
               onClick={() => {
@@ -92,6 +101,7 @@ export function MaterialForm({
             </button>
             <button
               type="button"
+              disabled={readOnly}
               aria-pressed={type === "link"}
               className={type === "link" ? "active" : ""}
               onClick={() => {
@@ -109,6 +119,8 @@ export function MaterialForm({
           Название
           <input
             autoFocus
+            data-autofocus
+            readOnly={readOnly}
             required
             maxLength={120}
             value={title}
@@ -121,6 +133,7 @@ export function MaterialForm({
             Текст
             <textarea
               rows={5}
+              readOnly={readOnly}
               maxLength={3000}
               value={body}
               onChange={(e) => setBody(e.target.value)}
@@ -133,6 +146,7 @@ export function MaterialForm({
             URL
             <input
               type="url"
+              readOnly={readOnly}
               ref={urlInput}
               aria-invalid={urlError}
               aria-describedby={urlError ? errorId : undefined}
@@ -152,6 +166,7 @@ export function MaterialForm({
           Теги через запятую
           <input
             maxLength={500}
+            readOnly={readOnly}
             value={tags}
             onChange={(e) => setTags(e.target.value)}
           />
@@ -167,7 +182,7 @@ export function MaterialForm({
             {error}
           </p>
         )}
-        <button className="button primary" type="submit">
+        <button className="button primary" type="submit" disabled={readOnly}>
           Сохранить находку
         </button>
       </form>
@@ -305,7 +320,7 @@ export function Library({
               <button
                 className={`material-visual shape-${i % 4}`}
                 onClick={() => setEdit(m)}
-                aria-label={`Редактировать находку: ${m.title}`}
+                aria-label={`${session.readOnly ? "Просмотреть" : "Редактировать"} находку: ${m.title}`}
               >
                 {m.type === "image" ? (
                   <img loading="lazy" src={urls[m.id]} alt={m.title} />
@@ -420,6 +435,7 @@ export function Library({
       </footer>
       {edit !== undefined && (
         <MaterialForm
+          readOnly={session.readOnly}
           material={edit ?? undefined}
           onClose={() => setEdit(undefined)}
           onSave={(m) =>

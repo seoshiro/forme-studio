@@ -268,17 +268,20 @@ async function drawObject(
     const image = await createImageBitmap(
       (await session.image(material.blobId)).blob,
     );
-    const scale = Math.max(o.width / image.width, o.height / image.height);
-    const w = image.width * scale,
-      h = image.height * scale;
-    ctx.drawImage(
-      image,
-      o.x + (o.width - w) / 2,
-      o.y + (o.height - h) / 2,
-      w,
-      h,
-    );
-    image.close();
+    try {
+      const scale = Math.max(o.width / image.width, o.height / image.height);
+      const w = image.width * scale,
+        h = image.height * scale;
+      ctx.drawImage(
+        image,
+        o.x + (o.width - w) / 2,
+        o.y + (o.height - h) / 2,
+        w,
+        h,
+      );
+    } finally {
+      image.close();
+    }
   } else if (o.type === "swatch") {
     ctx.fillStyle = o.color!;
     ctx.fillRect(o.x, o.y, o.width, o.height);

@@ -145,7 +145,8 @@ export async function queueUploads(
       }
     };
     tx.oncomplete = () => resolve();
-    tx.onerror = tx.onabort = () => reject(error ?? tx.error);
+    // Request errors bubble before the transaction's error is populated.
+    tx.onabort = () => reject(error ?? tx.error);
   });
   return images;
 }
