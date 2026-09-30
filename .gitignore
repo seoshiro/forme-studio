@@ -20,6 +20,8 @@ TOOL_ROUTING.md
 docs/*
 !docs/asset-provenance.json
 !docs/screenshots/
+!docs/media/
+!docs/ENGINEERING.md
 scripts/lock-local-dependencies.mjs
 .vercel/
 *.log

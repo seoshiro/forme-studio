@@ -1,68 +1,103 @@
+<div align="center">
+
 # FORME
 
-**Local-first visual research studio.** Turn references into editable moodboards and reusable design kits.
+### Visual Research & Direction Studio
 
-[Live Demo ↗](https://forme-studio-coral.vercel.app)
+Turn visual references into editable moodboards and reusable design kits.
 
-A quiet space for collecting images, composing a direction, and taking it into the next project. No account, backend, analytics, or image uploads to a server. The interface is in Russian.
+**[Live Demo ↗](https://forme-studio-coral.vercel.app/)** · [Features](#features) · [Engineering](#engineering-highlights)
 
-![FORME moodboard editor](docs/screenshots/moodboard.png)
+</div>
 
-## From a reference to a direction
+![FORME: warm editorial typography beside a real architectural moodboard](docs/media/hero.png)
 
-**References → moodboard → design kit → export**
+### A direction, in motion
 
-1. Open a sample collection or create your own. Import JPEG, PNG, or WebP images; add notes, links, tags, and favorites.
-2. Add materials to the board. Move, resize, layer, duplicate, and annotate them. Undo and redo composition changes.
-3. Wait for the saved indicator, then reload: the document and original images remain in this browser.
-4. Extract a palette, assign interface color roles, choose a font pairing, and inspect contrast in a live preview.
-5. Download the board as PNG, a design kit ZIP, or a full `.forme` archive that restores an editable copy in another browser.
+Library → compose → edit a note → choose an accent → export a design kit.
 
-<details>
-<summary><strong>Explore the screens: landing, library, and design kit</strong></summary>
+![14-second demo of FORME: opening a moodboard, moving an image, editing a note, assigning a palette color, and exporting](docs/media/forme-demo.gif)
 
-### A place to begin
+## What is FORME?
 
-![FORME landing page](docs/screenshots/landing.png)
+FORME is a local-first visual research studio for turning scattered references into a clear creative direction. Collect what catches your eye, find the composition, then take its colors and typography into your next project.
 
-### Your reference library
+**References → Moodboard → Design Kit → Export**
 
-![FORME reference library](docs/screenshots/library.png)
+No account or backend. Your images stay in your browser. The interface is in Russian; open **«Тихая архитектура»** in the demo to explore a ready-made collection.
 
-### A reusable visual language
+## Features
 
-![FORME design kit with palette and contrast preview](docs/screenshots/design-kit.png)
+- **A visual library.** Import JPEG, PNG, and WebP; collect notes and links; organize with tags, favorites, and search.
+- **An editable moodboard.** Move, resize, layer, and duplicate images, notes, and swatches on a persistent board.
+- **A design kit.** Extract palettes, assign semantic color roles, choose a font pairing, and inspect contrast in a live specimen.
+- **Reliable editing.** Undo/redo, autosave, visible write errors, and recovery options when tabs conflict.
+- **Portable projects.** Save a complete `.forme` archive, including original images, and restore an editable copy in another browser.
+- **Useful outputs.** Export a 1400 × 1000 PNG or a kit containing design tokens, CSS variables, and a design guide.
 
-</details>
+## Product
+
+### Collect
+
+![Reference library with image cards, favorites, tags, and extracted palettes](docs/media/library.png)
+
+Keep the image, its context, and the colors that made you stop.
+
+### Compose
+
+![Editable architectural moodboard with images, a note, swatches, and editing controls](docs/media/editor.png)
+
+Arrange references into a direction. Add a note to make the intent explicit.
+
+### Translate into a system
+
+![Design kit showing extracted colors, semantic roles, typography, and a live contrast preview](docs/media/design-kit.png)
+
+Give colors a job: background, surface, text, muted text, or accent. Preview the result before exporting.
 
 ## Engineering highlights
 
-- **Local-first persistence.** Native IndexedDB stores documents and image blobs. Uploads enter a durable queue before decoding. “Saved” follows transaction completion; failed writes remain visible and allow a recovery export.
-- **Multi-tab consistency.** Web Locks grant one editing session per project. Revision checks also reject stale writes. Conflicting changes are preserved for export instead of silently overwriting newer data.
-- **Undo/redo.** An 80-step metadata history avoids copying image buffers. Pointer gestures commit once at completion. History is session-local; reload restores the latest saved document.
-- **Portable project format.** A `.forme` file is a versioned ZIP STORE archive containing the manifest and original images. Import validates the whole payload before a transaction and assigns new project/image IDs.
-- **Hostile-import validation.** ZIP headers, paths, counts, declared sizes, CRC, document schema, and image ownership are checked. Compressed, encrypted, ZIP64, SVG, and HTML payloads are rejected. Raster signatures and pixel limits are checked before decoding.
-- **Real exports.** Canvas2D renders a 1400 × 1000 PNG from the complete composition and original images. The design kit includes `tokens.json`, `theme.css`, and `DESIGN.md`; font files are not bundled.
-- **Regression coverage.** Tests exercise persistence after reload, write failures, undo/redo, multi-tab conflicts, malicious archives, image-byte integrity, and restoration in a clean browser context.
+- **Persistence you can see.** IndexedDB stores documents and original blobs; “Saved” appears only after the transaction commits. Uploads enter a durable queue before decoding.
+- **Multi-tab consistency.** Web Locks coordinate editors and revision checks reject stale writes. Conflicts preserve changes for recovery export.
+- **Bounded history.** An 80-step metadata history avoids copying image buffers. Each pointer gesture commits once, on completion.
+- **Untrusted archive handling.** Import validates ZIP structure, paths, sizes, CRC, document schema, and image ownership before accepting a project.
+- **Portable data.** Versioned `.forme` archives preserve original image bytes; restoration creates new IDs. Tests verify the round trip in a clean browser context.
+- **Independent PNG rendering.** The editor uses focusable DOM objects; Canvas2D renders the complete composition from document geometry and original images.
 
-## Architecture
+### Architecture
 
-React 19 · TypeScript · Vite · native IndexedDB/Web Locks · Web Worker/OffscreenCanvas · Canvas2D · JSZip · Lucide · authored CSS.
+```mermaid
+flowchart LR
+    UI["Library · Moodboard · Design Kit"] <--> Session["Project session<br/>Commands + history"]
+    Worker["Image worker<br/>Thumbnails + palettes"] --> Session
+    Session <--> DB["IndexedDB<br/>Documents + image blobs"]
+    Session --> Export["PNG · design kit · .forme"]
+    Import["Validated .forme import"] --> DB
+```
 
-| Module | Responsibility |
-| --- | --- |
-| `model.ts` | Document schema, validation, commands, history, contrast, tokens |
-| `storage.ts` | IndexedDB transactions, upload queue, revisions, editing sessions |
-| `image.worker.ts` | Raster validation, thumbnails, deterministic palette extraction |
-| `Board.tsx` / `Editor.tsx` | Accessible DOM objects, pointer gestures, properties, layers |
-| `Library.tsx` / `Kit.tsx` | Reference collection and visual direction |
-| `exports.ts` | Canvas rendering and portable archive import/export |
+One document model connects the three workspaces. Hash-based routes run on static hosting; image processing and storage stay in the browser.
 
-The interactive board uses DOM elements for focus and accessible names; export has a separate Canvas2D renderer. The document model is independent of both. Hash-based routes work on static hosting without a server router.
+## Quality
 
-## Run locally
+The release baseline passed **8 unit tests and 32 Playwright tests**, plus lint, typecheck, production build, and clean `npm ci` reproduction. [CI runs →](https://github.com/seoshiro/forme-studio/actions)
 
-Requires Node.js 24 and npm. Dependencies are pinned in the lockfile.
+Chrome checks cover four screens at **390 / 768 / 1366 / 1920 px**, including axe scans. Separate Chromium and Firefox workflow smoke tests passed. Regression coverage includes failed writes, hostile imports, PNG output, and archive restoration with image-byte comparisons.
+
+**WebKit: BLOCKED** by missing native libraries in the Windows test environment. Physical-device and screen-reader checks remain unverified. [Check scope, known gaps, and reproduction commands →](docs/ENGINEERING.md)
+
+## Design
+
+Warm paper tones, editorial type, and generous space put references ahead of navigation. Manrope provides structure; Cormorant Garamond brings a quieter, expressive voice.
+
+The original brief selected mymind's editorial direction through Refero as inspiration. FORME follows that saved direction with its own layout and identity; live Refero access was unavailable. No affiliation with mymind or Refero.
+
+## Built with
+
+React 19 · TypeScript · Vite · native IndexedDB & Web Locks · Web Worker & OffscreenCanvas · Canvas2D · JSZip · Lucide · authored CSS · Playwright.
+
+## Quick start
+
+Node.js **24** and npm. No environment variables required.
 
 ```sh
 git clone https://github.com/seoshiro/forme-studio.git
@@ -71,39 +106,38 @@ npm ci
 npm run dev
 ```
 
-Open the local address printed by Vite (port 5180). For a production build, run `npm run build`, then `npm run preview`. No environment variables are required. The Vercel configuration builds with `npm ci` / `npm run build` and serves `dist`.
-
-## Testing
+For the production build:
 
 ```sh
-npm run lint
-npm run typecheck
-npm test
 npm run build
 npm run preview
-# In a second terminal, with Google Chrome installed:
-npm run test:e2e
-node scripts/verify-artifacts.mjs
-# Optional: verify the published origin in isolated browser contexts.
-node scripts/production-smoke.mjs https://forme-studio-coral.vercel.app
 ```
 
-The release baseline passed 8 unit tests and 32 Playwright tests against the production build, including axe checks across landing, library, editor, and kit at 390, 768, 1366, and 1920 px. Export verification checks PNG dimensions and original/restored image hashes. An isolated `npm ci` build and Chromium/Firefox workflow smoke also passed. These are observed release checks, not a claim of universal browser or accessibility conformance.
+<details>
+<summary>Source map</summary>
 
-WebKit launch was blocked by missing native libraries in the Windows test environment. Physical-device and screen-reader testing remain unverified. A supplemental compact-viewport check found undersized palette swatches at 683 × 384; core four-width axe checks were clean.
+```text
+src/App.tsx                    Routes and project lifecycle
+src/Library.tsx                Reference collection
+src/Board.tsx · Editor.tsx     Composition and editing controls
+src/Kit.tsx                    Semantic colors and typography
+src/model.ts · storage.ts      Document, history, persistence
+src/image.worker.ts            Image processing and palettes
+src/exports.ts                 PNG, design kit, archive import/export
+tests/                         Model and browser regressions
+docs/                          Engineering notes and product media
+```
 
-Publication checks on 30 September 2026 also passed in GitHub Actions (clean install, build, unit and browser tests) and on the public HTTPS origin in Chrome: upload → edit → reload → kit → PNG → archive → clean-context restore. Eight desktop/mobile axe scans reported no violations; automated review items still require human assessment.
+</details>
 
-## Limits and data ownership
+## Limits
 
-- Projects belong to the **current browser profile and origin**. Clearing site data can remove them. Export `.forme` backups regularly; there is no cloud sync or guaranteed offline app launch.
-- The board is fixed at 1400 × 1000. Limits: 300 materials, 500 objects, 10 MiB / 40 megapixels per image, and 200 MiB archive contents. Only FORME v1 ZIP STORE archives are supported.
-- Resize uses cover cropping. Rotation, freeform crop, multi-select, and an infinite canvas are not implemented.
-- Original blobs needed by undo history are retained while tabs are active. Without Web Locks, orphan cleanup is deferred to protect another tab's history, so storage can grow.
-- Exported color contrast is advisory; it does not certify the accessibility of a future design. The preview is a specimen, not a generated website.
+- Data belongs to the current browser profile and origin. Clearing site data can remove projects; keep `.forme` backups. No cloud collaboration or guaranteed offline launch.
+- The board is fixed at 1400 × 1000. Rotation, freeform cropping, multi-select, and an infinite canvas are not implemented. Undo history is session-local.
+- The design kit is a starting point for implementation. Its contrast checks do not certify a finished interface's accessibility.
 
-Potential next steps: direct Safari/device validation, explicit storage-usage controls, and better composition tools such as multi-selection. No cloud infrastructure is required for the current workflow.
+## License & credits
 
-## License and assets
+Code: [MIT](LICENSE). Demo photography: Unsplash. Fonts: Manrope and Cormorant Garamond under the SIL Open Font License. Icons: Lucide. [Asset provenance and third-party notices →](ASSETS.md)
 
-Application code: [MIT](LICENSE). Demo photos and fonts retain their own licenses; see [asset provenance and notices](ASSETS.md). Demo collections are fictional, not client work. No user uploads are included in this repository.
+Demo collections are fictional, not client work. The repository contains no user uploads.
