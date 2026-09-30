@@ -1,8 +1,8 @@
 # Explicit source allowlist: local evidence and tool configuration are not deployed.
 *
-!src/
+!src
 !src/**
-!public/
+!public
 !public/**
 !index.html
 !package.json
