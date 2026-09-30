@@ -280,10 +280,21 @@ try {
           }[view],
         )
         .waitFor({ state: "attached" });
-      await screen.evaluate(async () => {
-        await document.fonts.ready;
-        await Promise.all([...document.images].map((img) => img.decode()));
-      });
+      await screen.evaluate(() => document.fonts.ready);
+      await expect
+        .poll(() =>
+          screen
+            .locator("img")
+            .evaluateAll((images) =>
+              images.every(
+                (img) =>
+                  Boolean(img.currentSrc) &&
+                  img.complete &&
+                  img.naturalWidth > 0,
+              ),
+            ),
+        )
+        .toBe(true);
       await screen.addScriptTag({
         path: require.resolve("axe-core/axe.min.js"),
       });

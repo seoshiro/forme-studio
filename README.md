@@ -92,6 +92,8 @@ The release baseline passed 8 unit tests and 32 Playwright tests against the pro
 
 WebKit launch was blocked by missing native libraries in the Windows test environment. Physical-device and screen-reader testing remain unverified. A supplemental compact-viewport check found undersized palette swatches at 683 × 384; core four-width axe checks were clean.
 
+Publication checks on 30 September 2026 also passed in GitHub Actions (clean install, build, unit and browser tests) and on the public HTTPS origin in Chrome: upload → edit → reload → kit → PNG → archive → clean-context restore. Eight desktop/mobile axe scans reported no violations; automated review items still require human assessment.
+
 ## Limits and data ownership
 
 - Projects belong to the **current browser profile and origin**. Clearing site data can remove them. Export `.forme` backups regularly; there is no cloud sync or guaranteed offline app launch.
